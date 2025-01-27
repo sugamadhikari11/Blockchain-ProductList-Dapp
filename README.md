@@ -1,7 +1,7 @@
 # Product List DApp
 
 ## Overview
-This is a decentralized application (DApp) built using React and Ethereum that manages a **Product List**. The original assignment required creating a product list using a fixed-size array where users could **add** and **view products**. An additional feature has been implemented to allow users to **delete products** that they have added.
+This is a decentralized application (DApp) built using Hardhat and next js that manages a **Product List**. The original assignment required creating a product list using a fixed-size array where users could **add** and **view products**. An additional feature has been implemented to allow users to **delete products** that they have added.
 
 ## Features
 
