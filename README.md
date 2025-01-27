@@ -11,4 +11,4 @@ This is a decentralized application (DApp) built using Hardhat and next js that 
 
 ### Optional Features added
 - **Delete Products**: Users can delete only the products they have added (ownership verification is performed).
-- **Edit Products**: The solitary contract is written, left to implememt in frontend.
+- **Edit Products**: The solitary contract is written, left to implement in frontend.
