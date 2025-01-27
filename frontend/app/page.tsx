@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import ContractAddress from "@/contracts/contract-address.json";
 import productABI from "@/contracts/ProductList.json";
+import ConfirmationPopup from './ConfirmationPopup.js'; // Import the confirmation popup component
 
 interface Product {
   id: number;
@@ -31,7 +32,9 @@ export default function ProductApp() {
   const [products, setProducts] = useState<Product[]>([]);
   const [newProduct, setNewProduct] = useState({ name: "", price: "" });
   const [loading, setLoading] = useState(false);
-  const [currentUser , setCurrentUser ] = useState<string | null>(null); // State to hold the current user's address
+  const [currentUser  , setCurrentUser  ] = useState<string | null>(null); // State to hold the current user's address
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null); // State to hold the index of the product to delete
+  const [isDeletePopupOpen, setDeletePopupOpen] = useState(false); // State to control the delete confirmation popup
 
   // Initialize the provider, signer, and contract
   useEffect(() => {
@@ -101,6 +104,7 @@ export default function ProductApp() {
       setProducts(productList);
     } catch (error) {
       console.error("Error loading products:", error);
+      alert("Error loading products.");
     }
     setLoading(false);
   };
@@ -147,32 +151,28 @@ export default function ProductApp() {
     setLoading(false); // Reset loading state
   };
 
-  // Delete a product by ID
-  const deleteProduct = async (index: number) => {
-    if (!state.contract) return;
-
-    // Log the current product count
-    const currentCount = await state.contract.productCount();
-    console.log("Current Product Count:", currentCount.toString());
-
-    // Log the index being deleted
-    console.log("Attempting to delete product with ID:", index);
-
-    // Check if the ID is valid
-    if (index < 0 || index > currentCount) {
-      console.error("Invalid product ID:", index);
-      alert("Invalid product ID.");
-      return;
-    }
+  // Confirm delete action
+  const confirmDeleteProduct = async () => {
+    if (deleteIndex === null || !state.contract) return;
 
     try {
-      const tx = await state.contract.deleteProduct(index); // Use id - 1 for zero-based index
+      const tx = await state.contract.deleteProduct(deleteIndex); // Use id - 1 for zero-based index
       await tx.wait();
       alert("Product deleted successfully!");
       loadProducts(state.contract); // Reload the product list
     } catch (error) {
       console.error("Error deleting product:", error);
+      alert("Error deleting product.");
+    } finally {
+      setDeletePopupOpen(false); // Close the confirmation popup
+      setDeleteIndex(null); // Reset delete index
     }
+  };
+
+  // Open delete confirmation popup
+  const openDeletePopup = (index: number) => {
+    setDeleteIndex(index);
+    setDeletePopupOpen(true);
   };
 
   return (
@@ -215,14 +215,15 @@ export default function ProductApp() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {products.map((product, index) => (
               <div key={product.id} className="border rounded p-4">
-                <p className="font-semibold">ID: {product.id}</p>
+                <p className="font-semibold">ID: { product.id}</p>
                 <p>Name: {product.name}</p>
                 <p>Price: {product.price} ETH</p>
                 <p>Added by: {product.owner}</p>
                 {currentUser  && product.owner && currentUser .toLowerCase() === product.owner.toLowerCase() && (
                   <button
-                    onClick={() => deleteProduct(index)}
-                    className="bg-red-500 text-white px-4 py-2 mt-2 rounded hover:bg-red-600">
+                    onClick={() => openDeletePopup(index)}
+                    className="bg-red-500 text-white px-4 py-2 mt-2 rounded hover:bg-red-600"
+                  >
                     Delete
                   </button>
                 )}
@@ -231,6 +232,12 @@ export default function ProductApp() {
           </div>
         )}
       </div>
+
+      <ConfirmationPopup
+        open={isDeletePopupOpen}
+        onClose={() => setDeletePopupOpen(false)}
+        onConfirm={confirmDeleteProduct}
+      />
     </div>
   );
 }
